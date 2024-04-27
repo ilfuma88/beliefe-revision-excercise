@@ -1,4 +1,4 @@
-from sympy import And, Not, Or, to_cnf,symbols,Equivalent
+from sympy import And, Not, Or,symbols,Equivalent,Implies
 
 def parse_cnf(cnf_expression):
     """Parse a sympy CNF expression into a set of clauses where each clause is a set of literals."""
@@ -54,13 +54,35 @@ def check_logical_entailment(belief_base, formula):
     clauses = parse_cnf(combined_cnf)
     return davis_putnam(clauses)
 
+def to_cnf(expr):
+    # Replace implications and equivalences with their logical equivalents
+    expr = expr.replace(Implies, lambda A, B: Or(Not(A), B))
+    expr = expr.replace(Equivalent, lambda A, B: And(Or(Not(A), B), Or(A, Not(B))))
+
+    # Manual distribution of OR over AND
+    def distribute(expr):
+        if expr.func is Or:
+            disjuncts = list(expr.args)
+            for i, disjunct in enumerate(disjuncts):
+                if disjunct.func is And:
+                    rest = Or(*disjuncts[:i] + disjuncts[i+1:])
+                    return And(*[distribute(Or(conjunct, rest)) for conjunct in disjunct.args])
+            return Or(*[distribute(arg) for arg in disjuncts])
+        elif expr.func is And:
+            return And(*[distribute(arg) for arg in expr.args])
+        else:
+            return expr
+
+    # Apply distribution recursively
+    cnf_expr = distribute(expr)
+
+    return cnf_expr
+
 # Example usage:
 if __name__ == "__main__":
-    # P, Q, R = symbols('P Q R')
-    # print("#" + str(Equivalent(P, Or(Q, Not(R)))))
-
-    # belief_base = "Equivalent(P, Q | ~R)"
-    belief_base = "Equivalent(A, B | C) & A"
-    formula = "~B"
-    entails = check_logical_entailment(belief_base, formula)
+    A, B, C = symbols('A B C')
+    belief_base = And(Equivalent(A, Or(B, C)),Not(C))
+    print(belief_base)
+    formula = Not(C)
+    entails = check_logical_entailment("~C & (Equivalent(A, B | C))", formula)
     print("Belief base entails formula:", entails)
