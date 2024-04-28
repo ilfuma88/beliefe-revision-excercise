@@ -7,6 +7,7 @@ import re
 class Belief:
     def __init__(self, proposition: str):
         self.proposition = proposition
+        self.importance = 0
         valid, message = self.is_valid_proposition(proposition)
         if not valid:
             raise ValueError("Invalid proposition syntax: " + message)
