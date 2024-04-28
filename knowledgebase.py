@@ -17,7 +17,7 @@ class KnowledgeBase:
 
     def revise_belief(self, belief, priority):
         # Incorporates a new belief ensuring consistency
-        if not entails([], belief):
+        if not entails(None, belief):
             # Temporarily contract potential contradictions
             # Placeholder for contradiction handling
              ##contradiction = "not " + belief  # Simplistic contradiction handling
@@ -30,7 +30,7 @@ class KnowledgeBase:
         with order >= j results in a belief set that entails formula.
         """
         formula = to_cnf(formula)
-        if entails([], formula):
+        if entails(None, formula):
             # Tautologies have degree = 1
             return Decimal(1)
 

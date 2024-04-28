@@ -1,4 +1,4 @@
-from sympy import And, Not, Or,symbols,Equivalent,Implies,to_cnf
+from sympy import And, Not, Or,symbols,Equivalent,Implies,sympify
 
 def parse_cnf(cnf_expression):
     """Parse a sympy CNF expression into a set of clauses where each clause is a set of literals."""
@@ -47,6 +47,11 @@ def davis_putnam(clauses):
     return False
 
 def entails(belief_base, formula):
+    if belief_base is None :
+        negated_formula_cnf = to_cnf(Not(formula))
+        clauses = parse_cnf(negated_formula_cnf)
+        return davis_putnam(clauses)
+
     belief_base_cnf = to_cnf(belief_base)
     print(belief_base_cnf)
     negated_formula_cnf = to_cnf(Not(formula))
@@ -54,8 +59,6 @@ def entails(belief_base, formula):
     
     clauses = parse_cnf(combined_cnf)
     return davis_putnam(clauses)
-
-from sympy import symbols, Or, And, Not, Implies, sympify
 
 def remove_implications_and_equivalences(expr):
     """Recursively eliminate implications and equivalences in the expression."""
@@ -121,12 +124,3 @@ def to_cnf(expr):
     expr_neg_in = push_negations_inward(expr_no_imp)
     cnf_expr = distribute_and_over_or(expr_neg_in)
     return cnf_expr
-
-
-
-# Example usage:
-if __name__ == "__main__":
-    belief_base = "(A >> B) & ~C"
-    formula = "~B"
-    entails = entails(belief_base, formula)
-    print("Belief base entails formula:", entails)
