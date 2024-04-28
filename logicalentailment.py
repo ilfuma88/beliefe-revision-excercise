@@ -128,5 +128,5 @@ def to_cnf(expr):
 if __name__ == "__main__":
     belief_base = "(A >>) B & ~C"
     formula = "~B"
-    entails = check_logical_entailment(belief_base, formula)
+    entails = entails(belief_base, formula)
     print("Belief base entails formula:", entails)
