@@ -1,6 +1,6 @@
 from decimal import Decimal
 import sympy
-import logicalentailment
+from logicalentailment import entails, to_cnf
 
 class KnowledgeBase:
     # basic functions to initiate, add, remove, revise and print beliefs
@@ -13,11 +13,11 @@ class KnowledgeBase:
 
     def remove_belief(self, belief):
         if belief in self.beliefs:
-            self.beliefs.remove(belief)
+            del self.beliefs[belief]
 
-    def revise(self, belief, priority):
+    def revise_belief(self, belief, priority):
         # Incorporates a new belief ensuring consistency
-        if not self.entails(belief):
+        if not entails([], belief):
             # Temporarily contract potential contradictions
             # Placeholder for contradiction handling
              ##contradiction = "not " + belief  # Simplistic contradiction handling
@@ -29,8 +29,8 @@ class KnowledgeBase:
         Find maximum order j such that taking all beliefs in base
         with order >= j results in a belief set that entails formula.
         """
-        formula = self.to_cnf(formula)
-        if self.entails([], formula):
+        formula = to_cnf(formula)
+        if entails([], formula):
             # Tautologies have degree = 1
             return Decimal(1)
 
@@ -38,7 +38,7 @@ class KnowledgeBase:
         for order, group in self.iter_by_order():
             # Get formulas from beliefs
             base += [b.formula for b in group]
-            if self.entails(base, formula):
+            if entails(base, formula):
                 return order
         return Decimal(0)
     
@@ -89,7 +89,7 @@ class KnowledgeBase:
         """
         Contract the belief base by reducing the order of beliefs that are less entrenched than the given order and that contradict the formula.
         """
-        x = self.to_cnf(formula)
+        x = to_cnf(formula)
         order = Decimal(order)
 
         # Find the entrenchment degree of the new formula
