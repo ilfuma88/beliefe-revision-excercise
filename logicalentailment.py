@@ -126,7 +126,7 @@ def to_cnf(expr):
 
 # Example usage:
 if __name__ == "__main__":
-    belief_base = "(A >>) B & ~C"
+    belief_base = "(A >> B) & ~C"
     formula = "~B"
     entails = entails(belief_base, formula)
     print("Belief base entails formula:", entails)
