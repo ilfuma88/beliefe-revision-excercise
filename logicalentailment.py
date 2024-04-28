@@ -14,7 +14,7 @@ def negate_literal(literal):
 
 def davis_putnam(clauses):
     """Recursively apply the Davis-Putnam algorithm to check for unsatisfiability of CNF clauses."""
-    print("Current Clauses:", clauses)  # Debugging output
+    # print("Current Clauses:", clauses)  # Debugging output
     if not clauses:
         return False
     if any(not clause for clause in clauses):
@@ -36,11 +36,11 @@ def davis_putnam(clauses):
                     unit_clauses.add(next(iter(new_clause)))
                 new_clauses.append(new_clause)
         clauses = new_clauses
-        print("After Unit Propagation:", clauses)  # Debugging output
+        # print("After Unit Propagation:", clauses)  # Debugging output
 
     if clauses:
         literal = next(iter(clauses[0]))
-        print("Splitting on:", literal)  # Debugging output
+        # print("Splitting on:", literal)  # Debugging output
         return davis_putnam([clause - {literal} for clause in clauses if literal not in clause]) and \
                davis_putnam([clause - {negate_literal(literal)} for clause in clauses if negate_literal(literal) not in clause])
 
@@ -53,7 +53,6 @@ def entails(belief_base, formula):
         return davis_putnam(clauses)
 
     belief_base_cnf = to_cnf(belief_base)
-    print(belief_base_cnf)
     negated_formula_cnf = to_cnf(Not(formula))
     combined_cnf = And(belief_base_cnf, negated_formula_cnf)
     

@@ -1,5 +1,7 @@
 from decimal import Decimal
 import sympy
+from sympy import And
+from sympy import Not
 from logicalentailment import entails, to_cnf
 
 class KnowledgeBase:
@@ -17,12 +19,28 @@ class KnowledgeBase:
 
     def revise_belief(self, belief, priority):
         # Incorporates a new belief ensuring consistency
-        if not entails(None, belief):
-            # Temporarily contract potential contradictions
-            # Placeholder for contradiction handling
-             ##contradiction = "not " + belief  # Simplistic contradiction handling
-            self.contract(belief, priority)
-            self.expand(belief, priority)
+        if self.beliefs == {}:
+            self.expand(belief,priority)
+        else :
+            if self.has_contradiction_with_belief_base(belief):
+                self.contract(belief, priority)
+                self.expand(belief, priority)
+            else: 
+                self.expand(belief,priority)
+
+    def has_contradiction_with_belief_base(self, new_belief):
+        """
+        Check if a new belief contradicts with any existing beliefs.
+        A contradiction occurs if an existing belief entails the negation of the new belief.
+        """
+        for existing_belief in self.beliefs:
+            if entails(existing_belief, Not(new_belief)):
+                print(f"Contradiction found with belief: {existing_belief}")
+                return True
+            if entails(And(existing_belief, new_belief), sympy.false):
+                print(f"Adding {new_belief} contradicts with {existing_belief}")
+                return True
+        return False
 
     def degree(self, formula):
         """
