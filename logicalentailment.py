@@ -46,7 +46,7 @@ def davis_putnam(clauses):
 
     return False
 
-def check_logical_entailment(belief_base, formula):
+def entails(belief_base, formula):
     belief_base_cnf = to_cnf(belief_base)
     print(belief_base_cnf)
     negated_formula_cnf = to_cnf(Not(formula))
