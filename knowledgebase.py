@@ -44,7 +44,7 @@ class KnowledgeBase:
             if self.has_contradiction_with_belief_base(
                 formula, local_copy_of_belief_base
             ):
-                print(f"Contradiction found with belief: {belief} blah blh")
+                print(f"Contradiction found with belief: {belief}")
                 if belief_priority >= priority:
                     # Do nothing and return
                     return
