@@ -2,6 +2,7 @@ import sympy
 from sympy import SympifyError
 from knowledgebase import KnowledgeBase
 
+
 class Cli:
     def __init__(self):
         self.belief_revision = KnowledgeBase()
@@ -15,9 +16,15 @@ class Cli:
 
     def run(self):
         while True:
-            user_input = input("Enter a belief or type 'exit' to quit: ")
-            if user_input.lower() == 'exit':
+            user_input = input(
+                "Enter a belief, type 'empty' to empty the belief base, or type 'exit' to quit: "
+            )
+            if user_input.lower() == "exit":
                 break
+            elif user_input.lower() == "empty":
+                self.belief_revision.empty_belief_base()
+                print("Belief base has been emptied.")
+                continue
             priority_input = input("Enter the priority for this belief (0 to 1): ")
             try:
                 priority = float(priority_input)
@@ -30,9 +37,10 @@ class Cli:
             belief = self.safe_sympify(user_input)
             if belief is not None:
                 self.belief_revision.revise_belief(belief, priority)
-            
+
             print("Final Belief Base:")
             self.belief_revision.print_belief_base()
+
 
 if __name__ == "__main__":
     manager = Cli()

@@ -2,7 +2,10 @@ from decimal import Decimal
 import sympy
 from sympy import And
 from sympy import Not
+from sympy import Symbol
 from logicalentailment import entails, to_cnf
+from copy import deepcopy
+
 
 class KnowledgeBase:
     # basic functions to initiate, add, remove, revise and print beliefs
@@ -17,125 +20,76 @@ class KnowledgeBase:
         if belief in self.beliefs:
             del self.beliefs[belief]
 
+    def empty_belief_base(self):
+        self.beliefs.clear()
+
     def revise_belief(self, belief, priority):
         # Incorporates a new belief ensuring consistency
-        if self.beliefs == {}:
-            self.expand(belief,priority)
-        else :
+        if belief is None:
+            return
+        if not self.beliefs:
+            self.add_belief(belief, priority)
+        else:
             if self.has_contradiction_with_belief_base(belief):
                 self.contract(belief, priority)
-                self.expand(belief, priority)
-            else: 
-                self.expand(belief,priority)
+            else:
+                self.add_belief(belief, priority)
 
-    def has_contradiction_with_belief_base(self, new_belief):
+    def has_contradiction_with_belief_base(
+        self, new_belief, local_copy_of_belief_base=None
+    ):
         """
         Check if a new belief contradicts with any existing beliefs.
         A contradiction occurs if an existing belief entails the negation of the new belief.
         """
-        for existing_belief in self.beliefs:
+        belief_base = deepcopy(self.beliefs)
+
+        if local_copy_of_belief_base is not None:
+            belief_base = deepcopy(local_copy_of_belief_base)
+
+        for existing_belief in belief_base:
             if entails(existing_belief, Not(new_belief)):
-                print(f"Contradiction found with belief: {existing_belief}")
                 return True
             if entails(And(existing_belief, new_belief), sympy.false):
-                print(f"Adding {new_belief} contradicts with {existing_belief}")
                 return True
         return False
 
-    def degree(self, formula):
-        """
-        Find maximum order j such that taking all beliefs in base
-        with order >= j results in a belief set that entails formula.
-        """
-        formula = to_cnf(formula)
-        if entails(None, formula):
-            # Tautologies have degree = 1
-            return Decimal(1)
+    def contract(self, formula, priority):
+        # Create a local copy of the belief base
 
-        base = []
-        for order, group in self.iter_by_order():
-            # Get formulas from beliefs
-            base += [b.formula for b in group]
-            if entails(base, formula):
-                return order
-        return Decimal(0)
-    
-    def iter_by_order(self):
-        """
-        Generator that groups beliefs in belief base by decreasing order.
+        local_copy_of_belief_base = {}
 
-        Yields:
-            Tuples of type (order, list of beliefs with that order).
+        # Iterate over each belief in the belief base
+        for belief, belief_priority in list(self.beliefs.items()):
+            # Check if there is a contradiction
+            # If the belief's priority is greater or equal to the formula's priority
+            local_copy_of_belief_base[belief] = belief_priority
+            print(
+                f"Checking belief: {formula} with {belief} and {local_copy_of_belief_base}"
+            )
+            if self.has_contradiction_with_belief_base(
+                formula, local_copy_of_belief_base
+            ):
+                print(f"Contradiction found with belief: {belief} blah blh")
+                if belief_priority >= priority:
+                    # Do nothing and return
+                    return
+                else:
+                    print(f"Removing belief: {belief}")
+                    # Remove the belief from the local copy
+                    del local_copy_of_belief_base[belief]
 
-        Example:
-            >>> bb = BeliefBase()
-            >>> bb.add('a', 0.7)
-            >>> bb.add('a|b', 0.7)
-            >>> bb.add('b', 0.5)
-            >>> bb.add('a&f', 0.1)
-            >>> for it in bb.iter_by_order():
-            ...     print(it)
-            (0.7, [Belief(a, order=0.7), Belief(a | b, order=0.7)])
-            (0.5, [Belief(b, order=0.5)])
-            (0.1, [Belief(a & f, order=0.1)])
-        """
+        # Update the belief base with the local copy
+        self.beliefs = local_copy_of_belief_base
 
-        result = []
-        last_order = None
-
-        for belief in self.beliefs:
-            # If it is the first belief we examine, add it and set last_order
-            if last_order is None:
-                result.append(belief)
-                last_order = belief.order
-                continue
-
-            # If the order of this belief is equal to the previous, add it to the group
-            if belief.order == last_order:
-                result.append(belief)
-            # Otherwise, yield the group and reset
-            else:
-                yield last_order, result
-                result = []
-                result.append(belief)
-                last_order = belief.order
-
-        # Yield last result
-        yield last_order, result
-
-    def contract(self, formula, order):
-        """
-        Contract the belief base by reducing the order of beliefs that are less entrenched than the given order and that contradict the formula.
-        """
-        x = to_cnf(formula)
-        order = Decimal(order)
-
-        # Find the entrenchment degree of the new formula
-        new_belief_degree = self.degree(x)
-
-        # Temporary list to store beliefs to be modified
-        to_adjust = []
-
-        for belief in self.beliefs:
-            y = belief.formula
-            current_degree = self.degree(y)
-
-            # Check if the existing belief's degree is less than the new belief's degree and contradicts it
-            if current_degree < new_belief_degree:
-                # This belief needs adjustment; determine the new order
-                new_order = min(current_degree, order)  # Adjust the belief order to the lower of the two
-                to_adjust.append((belief, new_order))
-
-        # Change the order of the beliefs
-        for belief, new_order in to_adjust:
-            self.beliefs[belief] = new_order
+        # Expand the belief base with the new formula and priority
+        self.expand(formula, priority)
 
     def expand(self, formula, order):
         """
         Expand the belief base by adding the formula with the given order.
         """
         self.add_belief(formula, order)
-
 
     def print_belief_base(self):
         for belief, priority in self.beliefs.items():

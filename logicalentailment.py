@@ -1,16 +1,22 @@
-from sympy import And, Not, Or,symbols,Equivalent,Implies,sympify
+from sympy import And, Not, Or, symbols, Equivalent, Implies, sympify
+
 
 def parse_cnf(cnf_expression):
     """Parse a sympy CNF expression into a set of clauses where each clause is a set of literals."""
     if isinstance(cnf_expression, And):
-        return [set(clause.args) if isinstance(clause, Or) else {clause} for clause in cnf_expression.args]
+        return [
+            set(clause.args) if isinstance(clause, Or) else {clause}
+            for clause in cnf_expression.args
+        ]
     elif isinstance(cnf_expression, Or):
         return [{clause} for clause in cnf_expression.args]
     return [{cnf_expression}]
 
+
 def negate_literal(literal):
     """Return the negation of a sympy literal."""
     return Not(literal) if not isinstance(literal, Not) else literal.args[0]
+
 
 def davis_putnam(clauses):
     """Recursively apply the Davis-Putnam algorithm to check for unsatisfiability of CNF clauses."""
@@ -41,42 +47,80 @@ def davis_putnam(clauses):
     if clauses:
         literal = next(iter(clauses[0]))
         # print("Splitting on:", literal)  # Debugging output
-        return davis_putnam([clause - {literal} for clause in clauses if literal not in clause]) and \
-               davis_putnam([clause - {negate_literal(literal)} for clause in clauses if negate_literal(literal) not in clause])
+        return davis_putnam(
+            [clause - {literal} for clause in clauses if literal not in clause]
+        ) and davis_putnam(
+            [
+                clause - {negate_literal(literal)}
+                for clause in clauses
+                if negate_literal(literal) not in clause
+            ]
+        )
 
     return False
 
+
 def entails(belief_base, formula):
-    if belief_base is None :
+    if belief_base is None:
         negated_formula_cnf = to_cnf(Not(formula))
         clauses = parse_cnf(negated_formula_cnf)
         return davis_putnam(clauses)
 
-    belief_base_cnf = to_cnf(belief_base)
-    negated_formula_cnf = to_cnf(Not(formula))
+    if formula is None:
+        belief_base_cnf = to_cnf(belief_base) if belief_base else []
+        clauses = parse_cnf(belief_base_cnf)
+        return davis_putnam(clauses)
+
+    belief_base_cnf = to_cnf(belief_base) if belief_base else []
+    negated_formula_cnf = to_cnf(Not(formula)) if formula else []
+
+    if not belief_base_cnf or not negated_formula_cnf:
+        return False
+
     combined_cnf = And(belief_base_cnf, negated_formula_cnf)
-    
+
     clauses = parse_cnf(combined_cnf)
     return davis_putnam(clauses)
 
+
 def remove_implications_and_equivalences(expr):
     """Recursively eliminate implications and equivalences in the expression."""
+    if isinstance(expr, list):
+        return [remove_implications_and_equivalences(e) for e in expr]
+
     if expr.func == Implies:
         A, B = expr.args
-        return Or(Not(remove_implications_and_equivalences(A)), remove_implications_and_equivalences(B))
+        return Or(
+            Not(remove_implications_and_equivalences(A)),
+            remove_implications_and_equivalences(B),
+        )
     elif expr.func == Equivalent:
         A, B = expr.args
         # Equivalent A <-> B is (A -> B) & (B -> A)
-        return And(Or(Not(remove_implications_and_equivalences(A)), remove_implications_and_equivalences(B)),
-                   Or(Not(remove_implications_and_equivalences(B)), remove_implications_and_equivalences(A)))
+        return And(
+            Or(
+                Not(remove_implications_and_equivalences(A)),
+                remove_implications_and_equivalences(B),
+            ),
+            Or(
+                Not(remove_implications_and_equivalences(B)),
+                remove_implications_and_equivalences(A),
+            ),
+        )
     elif expr.func in (And, Or):
-        return expr.func(*(remove_implications_and_equivalences(arg) for arg in expr.args))
+        return expr.func(
+            *(remove_implications_and_equivalences(arg) for arg in expr.args)
+        )
     elif expr.func == Not:
         return Not(remove_implications_and_equivalences(expr.args[0]))
     return expr
 
+
 def push_negations_inward(expr):
     """Use De Morgan's laws to push negations inward."""
+    if isinstance(expr, list):
+        return [push_negations_inward(e) for e in expr]
+
     if expr.func == Not:
         arg = expr.args[0]
         if arg.func == And:
@@ -88,14 +132,20 @@ def push_negations_inward(expr):
         return expr.func(*(push_negations_inward(a) for a in expr.args))
     return expr
 
+
 def distribute_and_over_or(expr):
     """Refined distribution and simplification of logical expressions."""
+    if isinstance(expr, list):
+        return [distribute_and_over_or(e) for e in expr]
+
     if expr.func == And:
         simplified_expr = simplify_and(list(expr.args))
         return simplified_expr if simplified_expr else expr
     elif expr.func == Or:
         return Or(*[distribute_and_over_or(arg) for arg in expr.args]).simplify()
-    return expr
+    else:
+        return expr
+
 
 def simplify_and(args):
     """Handle distributing ANDs over ORs while minimizing redundancy."""
@@ -105,10 +155,18 @@ def simplify_and(args):
         args = [combined] + args[2:]
     return args[0]
 
+
 def combine_and_simplify(left, right):
     """Combine two expressions under AND and simplify, checking for redundancies."""
     if left.func == Or and right.func == Or:
-        return Or(*[And(l, r).simplify() for l in left.args for r in right.args if Not(l).simplify() != r and Not(r).simplify() != l])
+        return Or(
+            *[
+                And(l, r).simplify()
+                for l in left.args
+                for r in right.args
+                if Not(l).simplify() != r and Not(r).simplify() != l
+            ]
+        )
     elif left.func == Or:
         return Or(*[And(l, right).simplify() for l in left.args])
     elif right.func == Or:
