@@ -1,5 +1,8 @@
 # beliefe-revision-excercise
 
-sfs
-sfsf
-fs
+negation ~
+
+impliction >>
+
+the cli when adding  abelief does revision
+so it automatically does contraction, entilement and expansion

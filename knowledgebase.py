@@ -71,11 +71,20 @@ class KnowledgeBase:
         if local_copy_of_belief_base is not None:
             belief_base = deepcopy(local_copy_of_belief_base)
 
-        for existing_belief in belief_base:
-            if entails(existing_belief, Not(new_belief)):
+        # Generate a belief that is the logical AND of all beliefs in the belief base
+        combined_belief = And(*belief_base)
+
+        if entails(combined_belief, Not(new_belief)):
+            return True
+        if entails(And(combined_belief, new_belief), sympy.false):
                 return True
-            if entails(And(existing_belief, new_belief), sympy.false):
-                return True
+        # for existing_belief in belief_base:
+        #     print(f"Checking contradiction with: {existing_belief}")
+        #     # print(f"Checking contradiction with: {existing_belief.keys()}")
+        #     if entails(existing_belief, Not(new_belief)):
+        #         return True
+        #     if entails(And(existing_belief, new_belief), sympy.false):
+        #         return True
         return False
 
     
