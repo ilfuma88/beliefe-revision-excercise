@@ -16,9 +16,15 @@ class Cli:
 
     def run(self):
         while True:
-            user_input = input(
-                "Enter a belief, type 'empty' to empty the belief base, or type 'exit' to quit: "
+            print("\nCommands:")
+            print("1. Enter a belief to add it to the belief base.")
+            print(
+                "2. Type 'entails' to check entailment for a belief with the current belief base."
             )
+            print("3. Type 'empty' to empty the belief base.")
+            print("4. Type 'exit' to quit.\n")
+
+            user_input = input("Enter a command: ")
             if user_input.lower() == "exit":
                 break
             elif user_input.lower() == "empty":
