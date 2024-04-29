@@ -25,6 +25,15 @@ class Cli:
                 self.belief_revision.empty_belief_base()
                 print("Belief base has been emptied.")
                 continue
+            elif user_input.lower() == "entails":
+                input_formula = input("Enter the formula to check for entailment: ")
+                belief = self.safe_sympify(input_formula)
+                print(f"Checking entailment for belief: {belief}")
+                if not self.belief_revision.has_contradiction_with_belief_base(belief):
+                    print("The formula is entailed by the belief base")
+                else:
+                    print("The formula is not entailed by the belief base")
+                    continue
             priority_input = input("Enter the priority for this belief (0 to 1): ")
             try:
                 priority = float(priority_input)
