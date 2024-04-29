@@ -12,6 +12,16 @@ def print_knowledge_base():
 def generate_knowledge_base():
     print("Generating Knowledge Base...")
     # Add your code here to generate the knowledge base.
+    Kb.add_belief("q")
+    Kb.add_belief("A&B")
+    Kb.add_belief("~A&B")
+    
+def contract_knowledge_base():
+    print("Contracting Knowledge Base...")
+    # Add your code here to contract the knowledge base.
+    new_belief = input("Enter a belief to be removed from the KB: ")
+
+    Kb.contract_belief(new_belief)
 
 def extend_knowledge_base():
     print("Extending Knowledge Base...")
@@ -33,26 +43,33 @@ def check_entailment_with_knowledge_base():
     print("Checking Entailment with Knowledge Base...")
     # Add your code here to check entailment with the knowledge base.
 
-def main():
+def print_CNF_form():
+    print("Printing CNF Form...")
+    # Add your code here to print the CNF form of the knowledge base.
+    for belief in Kb.beliefs:
+        print(belief.convert_to_cnf())
     
-    Kb.add_belief("q")
-    Kb.add_belief("A&B")
-    Kb.add_belief("-A&B")
+    
+def main():
     options = {
         '1': print_knowledge_base,
         '2': generate_knowledge_base,
-        '3': extend_knowledge_base,
-        '4': revise_knowledge_base,
-        '5': check_entailment_with_knowledge_base
+        '3': contract_knowledge_base,
+        '4': extend_knowledge_base,
+        '5': revise_knowledge_base,
+        '6': check_entailment_with_knowledge_base,
+        '7': print_CNF_form
     }
 
     while True:
         print("\nChoose an option:")
         print("1) Print Knowledge Base")
         print("2) Generate Knowledge Base")
-        print("3) Extend Knowledge Base")
-        print("4) Revise Knowledge Base")
-        print("5) Check Entailment with Knowledge Base")
+        print("3) Contract Knowledge Base")
+        print("4) Extend Knowledge Base")
+        print("5) Revise Knowledge Base")
+        print("6) Check Entailment with Knowledge Base")
+        print("7) Print CNF Form")
         
         choice = input("Enter option number (1-5): ")
         
