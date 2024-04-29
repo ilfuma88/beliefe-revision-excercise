@@ -33,6 +33,13 @@ class KnowledgeBase:
 
         local_copy_of_belief_base = {}
 
+        for belief, belief_priority in list(self.beliefs.items()):
+            print(f"cheking NON ORDERED: {formula} with {belief} and {local_copy_of_belief_base}")
+            
+        for belief, belief_priority in list(self.beliefs.items()):
+            print(f"cheking non ORDERED: {formula} with {belief} and {local_copy_of_belief_base}")
+
+
         # Iterate over each belief in the belief base
         for belief, belief_priority in list(self.beliefs.items()):
             # Check if there is a contradiction
